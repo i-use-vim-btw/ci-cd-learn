@@ -1,0 +1,28 @@
+# Dockerfile.test - Test Build
+
+# Build stage
+FROM golang:1.22.4 AS builder
+
+WORKDIR /app
+
+# Copy go.mod and go.sum and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy only the test file (excluding the API code)
+COPY main_test.go .
+
+# Build the Go test binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go test -c -o api.test .
+
+# Final stage - Create a minimal image for running the test binary
+FROM alpine:3.18
+
+WORKDIR /app
+
+# Copy the compiled test binary from the build stage
+COPY --from=builder /app/api.test .
+
+# Run the test binary by default
+CMD ["./api.test", "-test.run", "TestGetAlbumByID"]
+

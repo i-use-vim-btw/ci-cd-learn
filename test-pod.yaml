@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-test
+spec:
+  restartPolicy: Never
+  containers:
+  - name: test
+    image: my-test-image  
+    imagePullPolicy: Never
+    command: ["/app/api.test", "-test.run", "TestGetAlbumByID"]
+    env:
+    - name: API_URL
+      value: "http://my-api.default.svc.cluster.local:8080/albums/1"  # Kubernetes DNS for the API service
+

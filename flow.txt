@@ -1,0 +1,5 @@
+create a multi stage docker file
+
+create a simple helm chart for deployment with 1 pod, 1 clusterip
+
+write a 
