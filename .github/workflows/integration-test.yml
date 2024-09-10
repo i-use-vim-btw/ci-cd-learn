@@ -1,7 +1,7 @@
 name: Integration Test
 
 on:
-  workflow_dispatch:   # This triggers the workflow manually
+  workflow_dispatch:  # Manually trigger the workflow
 
 jobs:
   test:
@@ -38,35 +38,41 @@ jobs:
       - name: Create Kind cluster
         run: kind create cluster --name my-kind-cluster
 
-      # Step 7: Build API Docker image
+      # Step 7: Build API Docker Image
       - name: Build API Docker Image
         run: docker build -t my-api-image -f Dockerfile.api .
 
-      # Step 8: Build Test Docker image
+      # Step 8: Build Test Docker Image
       - name: Build Test Docker Image
         run: docker build -t my-test-image -f Dockerfile.test .
 
-      # Step 9: Load Docker images into Kind cluster
+      # Step 9: Load API Docker Image into Kind
       - name: Load API Docker Image into Kind
         run: kind load docker-image my-api-image --name my-kind-cluster
       
+      # Step 10: Load Test Docker Image into Kind
       - name: Load Test Docker Image into Kind
         run: kind load docker-image my-test-image --name my-kind-cluster
 
-      # Step 10: Deploy API using Helm
+      # Step 11: Deploy API Using Helm
       - name: Deploy API
         run: helm install my-api ./my-api-chart
 
-      # Step 11: Deploy the test pod
+      # Step 12: Wait until the API pod is ready
+      - name: Wait for API Pod to be Ready
+        run: |
+          kubectl wait --for=condition=ready pod -l app=my-api --timeout=120s
+
+      # Step 13: Deploy the test pod
       - name: Deploy Test Pod
         run: kubectl apply -f test-pod.yaml
 
-      # Step 12: Wait for the test pod to complete
-      - name: Wait for Test Pod to Complete
+      # Step 14: Wait until the test pod is ready
+      - name: Wait for Test Pod to be Ready
         run: |
-          kubectl wait --for=condition=complete --timeout=60s pod/api-test
+          kubectl wait --for=condition=ready pod/api-test --timeout=120s
 
-      # Step 13: Retrieve test pod logs (for test results)
+      # Step 15: Retrieve test pod logs (for test results)
       - name: Get Test Pod Logs
         run: |
           kubectl logs api-test
